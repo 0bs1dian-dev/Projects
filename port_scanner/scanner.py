@@ -3,126 +3,126 @@ import requests
 import time
 import argparse
 
-def pulisci_banner(banner_testo):
-    """Estrae una stringa pulita dal banner per l'interrogazione API."""
-    banner_clean = banner_testo.replace("SSH-2.0-", "").replace("_", " ")
-    parti = banner_clean.split()
-    if len(parti) >= 2:
-        return f"{parti[0]} {parti[1].split('p')[0]}"
+def clean_banner(banner_text):
+    """Extracts a cleaned string from the banner for the API query."""
+    banner_clean = banner_text.replace("SSH-2.0-", "").replace("_", " ")
+    parts = banner_clean.split()
+    if len(parts) >= 2:
+        return f"{parts[0]} {parts[1].split('p')[0]}"
     return banner_clean
 
-def interroga_nvd_real(keyword):
-    """Interroga il National Vulnerability Database (NVD) del NIST."""
+def query_nvd_real(keyword):
+    """Queries NIST's National Vulnerability Database (NVD)."""
     url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
     params = {"keywordSearch": keyword, "resultsPerPage": 3}
     
     try:
-        risposta = requests.get(url, params=params, timeout=10)
-        if risposta.status_code == 200:
-            dati = risposta.json()
-            if dati.get("totalResults", 0) == 0:
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("totalResults", 0) == 0:
                 return None
                 
-            vulnerabilita_trovate = []
-            for vuln in dati.get("vulnerabilities", []):
+            found_vulnerabilities = []
+            for vuln in data.get("vulnerabilities", []):
                 cve_data = vuln.get("cve", {})
-                vulnerabilita_trovate.append({
+                found_vulnerabilities.append({
                     "id": cve_data.get("id"),
-                    "desc": cve_data.get("descriptions", [{}])[0].get("value", "Nessuna descrizione")[:150] + "..."
+                    "desc": cve_data.get("descriptions", [{}])[0].get("value", "No description available")[:150] + "..."
                 })
-            return vulnerabilita_trovate
+            return found_vulnerabilities
     except Exception:
         return None
     return None
 
-def scan_e_grab(target_host, porta):
-    """Verifica se la porta è aperta e tenta il banner grabbing."""
-    risultato = {"aperta": False, "banner": ""}
+def scan_and_grab(target_host, port):
+    """Checks if the port is open and attempts banner grabbing."""
+    result = {"open": False, "banner": ""}
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(2.0)
-        if s.connect_ex((target_host, porta)) == 0:
-            risultato["aperta"] = True
+        if s.connect_ex((target_host, port)) == 0:
+            result["open"] = True
             try:
-                risultato["banner"] = s.recv(1024).decode("utf-8", errors="ignore").strip()
+                result["banner"] = s.recv(1024).decode("utf-8", errors="ignore").strip()
             except socket.timeout:
-                risultato["banner"] = "Porta aperta (Nessun banner spontaneo)"
+                result["banner"] = "Port open (No spontaneous banner)"
     except Exception:
         pass
     finally:
         s.close()
-    return risultato
+    return result
 
-def genera_report_markdown(target, risultati):
-    """Prende i risultati e genera un report formattato in Markdown."""
+def generate_markdown_report(target, results):
+    """Takes the results and generates a Markdown-formatted report."""
     filename = f"report_{target.replace('.', '_')}.md"
     
     with open(filename, "w") as f:
-        f.write(f"# 🛡️ Report di Vulnerability Assessment\n\n")
-        f.write(f"**Target Analizzato:** `{target}`  \n")
-        f.write(f"**Data Scansione:** {time.strftime('%Y-%m-%d %H:%M:%S')}  \n\n")
+        f.write(f"# 🛡️ Vulnerability Assessment Report\n\n")
+        f.write(f"**Analyzed Target:** `{target}`  \n")
+        f.write(f"**Scan Date:** {time.strftime('%Y-%m-%d %H:%M:%S')}  \n\n")
         f.write(f"--- \n\n")
         
-        for r in risultati:
-            f.write(f"### 🚪 Porta {r['porta']} - {r['stato']}\n")
+        for r in results:
+            f.write(f"### 🚪 Port {r['port']} - {r['status']}\n")
             if r['banner']:
-                f.write(f"* **Banner Rilevato:** `{r['banner']}`\n")
+                f.write(f"* **Detected Banner:** `{r['banner']}`\n")
             
             if r['cve']:
-                f.write(f"\n#### 🚨 Vulnerabilità Critiche Identificate (NIST NVD):\n")
+                f.write(f"\n#### 🚨 Identified Critical Vulnerabilities (NIST NVD):\n")
                 for cve in r['cve']:
                     f.write(f"* **{cve['id']}**\n")
-                    f.write(f"  * *Descrizione:* {cve['desc']}\n")
-            elif r['stato'] == "APERTA":
-                f.write(f"\n✅ Nessuna CVE nota trovata nel primo screening per questa release.\n")
+                    f.write(f"  * *Description:* {cve['desc']}\n")
+            elif r['status'] == "OPEN":
+                f.write(f"\n✅ No known CVEs found during initial screening for this release.\n")
             f.write(f"\n\n")
             
-    print(f"[*] Report salvato con successo in: '{filename}'")
+    print(f"[*] Report successfully saved to: '{filename}'")
 
 def main():
-    # Configurazione di argparse per gestire i parametri da terminale
-    parser = argparse.ArgumentParser(description="Framework di Vulnerability Assessment in tempo reale connesso al NIST NVD.")
-    parser.add_argument("-t", "--target", required=True, help="Indirizzo IP o Dominio del target da scansionare")
+    # Argparse setup for handling command-line arguments
+    parser = argparse.ArgumentParser(description="Real-time Vulnerability Assessment Framework connected to NIST NVD.")
+    parser.add_argument("-t", "--target", required=True, help="Target IP address or Domain to scan")
     args = parser.parse_args()
     
-    # Lista delle porte standard da scansionare
-    porte_comuni = [21, 22, 80, 443, 8080]
+    # List of standard ports to scan
+    common_ports = [21, 22, 80, 443, 8080]
     report_data = []
     
-    print(f"[*] Framework di Vulnerability Assessment avviato su: {args.target}")
-    print("[*] Connessione live al NIST NVD attiva.\n")
+    print(f"[*] Vulnerability Assessment Framework started on: {args.target}")
+    print("[*] Live connection to NIST NVD active.\n")
     
-    for porta in porte_comuni:
-        esito = scan_e_grab(args.target, porta)
+    for port in common_ports:
+        outcome = scan_and_grab(args.target, port)
         
-        if esito["aperta"]:
-            print(f"[+] Porta {porta} [APERTA] -> Banner: {esito['banner']}")
-            cve_trovate = None
+        if outcome["open"]:
+            print(f"[+] Port {port} [OPEN] -> Banner: {outcome['banner']}")
+            found_cves = None
             
-            # Se abbiamo un banner reale, interroghiamo il NIST
-            if "Porta aperta" not in esito["banner"] and esito["banner"]:
-                keyword = pulisci_banner(esito['banner'])
-                cve_trovate = interroga_nvd_real(keyword)
+            # If a banner was retrieved, query NIST
+            if "Port open" not in outcome["banner"] and outcome["banner"]:
+                keyword = clean_banner(outcome['banner'])
+                found_cves = query_nvd_real(keyword)
                 
-                if cve_trovate:
-                    print(f"    🚨 Trovate vulnerabilità per '{keyword}'! Generazione dati...")
+                if found_cves:
+                    print(f"    🚨 Found vulnerabilities for '{keyword}'! Generating data...")
             
-            # Salviamo i dati per il report finale
+            # Save data for the final report
             report_data.append({
-                "porta": porta,
-                "stato": "APERTA",
-                "banner": esito["banner"],
-                "cve": cve_trovate
+                "port": port,
+                "status": "OPEN",
+                "banner": outcome["banner"],
+                "cve": found_cves
             })
             
-            time.sleep(1) # Rispetto dei limiti della frequenza API
+            time.sleep(1) # Respect API rate limits
             
-    # Alla fine dello scanning, se abbiamo trovato porte aperte, generiamo il report
+    # Generate report if open ports were discovered
     if report_data:
-        print("\n[*] Generazione del report in corso...")
-        genera_report_markdown(args.target, report_data)
+        print("\n[*] Generating report...")
+        generate_markdown_report(args.target, report_data)
     else:
-        print("[-] Nessuna porta aperta rilevata. Report non generato.")
+        print("[-] No open ports detected. Report was not generated.")
 
 if __name__ == "__main__":
     main()
