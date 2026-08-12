@@ -2,71 +2,73 @@ import json
 from datetime import datetime
 from scapy.all import sniff, IP, TCP
 
-# Dizionario globale per il Port Scan
-storico_connessioni = {}
-SOGLIA_PORT_SCAN = 10
+# Global dictionary for Port Scan tracking
+connection_history = {}
+PORT_SCAN_THRESHOLD = 10
 
-def salva_alert_json(tipo_allarme, dettagli):
+def save_alert_json(alert_type, details):
     """
-    Prende i dettagli di un allarme, aggiunge un timestamp preciso 
-    e scrive l'evento in un file JSON in modalità 'append' (aggiunta).
+    Takes alert details, adds a precise timestamp, 
+    and writes the event to a JSON file in append mode.
     """
     payload = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "severity": "HIGH" if tipo_allarme == "PORT_SCAN" else "MEDIUM",
-        "alert_type": tipo_allarme,
-        "details": dettagli
+        "severity": "HIGH" if alert_type == "PORT_SCAN" else "MEDIUM",
+        "alert_type": alert_type,
+        "details": details
     }
     
-    # Scriviamo l'allarme nel file (una riga per ogni evento, formato JSON Lines)
+    # Write the alert to file (one line per event, JSON Lines format)
     with open("security_alerts.json", "a") as f:
         f.write(json.dumps(payload) + "\n")
 
-def analizza_pacchetto(packet):
-    global storico_connessioni
+def analyze_packet(packet):
+    global connection_history
     
     if packet.haslayer(IP):
-        ip_sorgente = packet[IP].src
-        ip_destinazione = packet[IP].dst
+        source_ip = packet[IP].src
+        destination_ip = packet[IP].dst
         
         if packet.haslayer(TCP):
-            porta_dest = packet[TCP].dport
+            dest_port = packet[TCP].dport
             
-            # 1. REGOLA PROTOCOLLI NON SICURI
-            if porta_dest in [80, 21, 23]:
-                protocolli = {80: "HTTP", 21: "FTP", 23: "Telnet"}
-                nome_proto = protocolli[porta_dest]
+            # 1. UNSECURE PROTOCOLS RULE
+            if dest_port in [80, 21, 23]:
+                protocols = {80: "HTTP", 21: "FTP", 23: "Telnet"}
+                proto_name = protocols[dest_port]
                 
-                msg = f"Rilevato traffico non cifrato {nome_proto} verso {ip_destinazione}:{porta_dest}"
+                msg = f"Detected unencrypted {proto_name} traffic to {destination_ip}:{dest_port}"
                 print(f"[⚠️ SECURITY ALERT] {msg}")
                 
-                # Salviamo l'evento nel JSON
-                salva_alert_json("INSECURE_PROTOCOL", {"src_ip": ip_sorgente, "dst_ip": ip_destinazione, "port": porta_dest, "protocol": nome_proto})
+                # Save event to JSON
+                save_alert_json("INSECURE_PROTOCOL", {
+                    "src_ip": source_ip, 
+                    "dst_ip": destination_ip, 
+                    "port": dest_port, 
+                    "protocol": proto_name
+                })
 
-            # 2. REGOLA PORT SCAN
-            if ip_sorgente not in storico_connessioni:
-                storico_connessioni[ip_sorgente] = set()
+            # 2. PORT SCAN RULE
+            if source_ip not in connection_history:
+                connection_history[source_ip] = set()
             
-            storico_connessioni[ip_sorgente].add(porta_dest)
-            quante_porte = len(storico_connessioni[ip_sorgente])
+            connection_history[source_ip].add(dest_port)
+            scanned_ports_count = len(connection_history[source_ip])
             
-            if quante_porte > SOGLIA_PORT_SCAN:
-                msg = f"L'IP {ip_sorgente} ha scansionato {quante_porte} porte distinte."
+            if scanned_ports_count > PORT_SCAN_THRESHOLD:
+                msg = f"IP {source_ip} scanned {scanned_ports_count} distinct ports."
                 print(f"[🚨 CRITICAL ALERT] {msg}")
                 
-                # Salviamo l'evento nel JSON
-                salva_alert_json("PORT_SCAN", {"attacker_ip": ip_sorgente, "ports_scanned": quante_porte})
+                # Save event to JSON
+                save_alert_json("PORT_SCAN", {
+                    "attacker_ip": source_ip, 
+                    "ports_scanned": scanned_ports_count
+                })
 
 def main():
-    print("[*] mini-IDS Professionale avviato... Monitoraggio attivo.")
-    print("[*] Gli alert verranno salvati in 'security_alerts.json'.\n")
-    sniff(prn=analizza_pacchetto)
-
-if __name__ == "__main__":
-    main()
-    
-    # Rimuoviamo il count così lo sniffer gira all'infinito finché non lo stoppi tu
-    sniff(prn=analizza_pacchetto)
+    print("[*] Professional mini-IDS started... Active monitoring.")
+    print("[*] Alerts will be saved to 'security_alerts.json'.\n")
+    sniff(prn=analyze_packet)
 
 if __name__ == "__main__":
     main()
