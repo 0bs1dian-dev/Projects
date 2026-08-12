@@ -1,57 +1,56 @@
-
 # Network IDS & Traffic Detector (Python / Scapy)
 
-Un piccolo **Intrusion Detection System (IDS)** embrionale sviluppato in Python. Il tool è in grado di intercettare il traffico di rete in tempo reale sulla scheda di rete locale, analizzare la struttura dei pacchetti nei livelli IP e TCP/UDP, e applicare regole di security per identificare potenziali minacce o anomalie di configurazione.
+An embryonic, lightweight **Intrusion Detection System (IDS)** developed in Python. The tool captures live network traffic on the local network interface, analyzes packet structures at the IP and TCP/UDP layers, and applies security rules to detect potential threats or configuration anomalies.
 
-Gli alert generati vengono stampati a terminale e storicizzati in un file log in formato strutturato (JSON), pronto per essere indicizzato da sistemi SIEM (es. Splunk o ELK Stack).
+Generated alerts are printed to the terminal and logged into a structured log file (JSON), ready to be indexed by SIEM systems (e.g., Splunk or ELK Stack).
 
-## 🚀 Funzionalità Principali
+## 🚀 Key Features
 
-* **Live Packet Sniffing:** Cattura in tempo reale del traffico di rete sfruttando le capacità a basso livello della libreria `Scapy`.
-* **Deep Packet Inspection (DPI) Essenziale:** Smontaggio dei pacchetti per estrarre indirizzi IP (Sorgente/Destinazione) e porte di trasporto (TCP/UDP).
-* **Rilevamento Protocolli Non Sicuri:** Monitoraggio delle porte standard non cifrate (`80` HTTP, `21` FTP, `23` Telnet) per segnalare il transito di dati in chiaro.
-* **Rilevamento Port Scan (Logica Stateful):** Utilizzo di strutture dati in memoria per tracciare il numero di porte uniche contattate da un singolo IP. Se viene superata la soglia impostata (Default: 10), scatta un alert critico.
-* **SIEM-Ready Logging:** Esportazione automatica degli alert in formato JSON strutturato con timestamp e livelli di severity (`MEDIUM` / `HIGH`).
+* **Live Packet Sniffing:** Real-time network traffic capture leveraging the low-level capabilities of the `Scapy` library.
+* **Essential Deep Packet Inspection (DPI):** Packet parsing to extract source/destination IP addresses and transport ports (TCP/UDP).
+* **Unsecure Protocol Detection:** Monitoring standard unencrypted ports (`80` HTTP, `21` FTP, `23` Telnet) to flag unencrypted data in transit.
+* **Port Scan Detection (Stateful Logic):** Uses in-memory data structures to track the number of unique ports targeted by a single IP address. A critical alert is triggered if the configured threshold is exceeded (Default: 10).
+* **SIEM-Ready Logging:** Automatic export of alerts in structured JSON format, complete with timestamps and severity levels (`MEDIUM` / `HIGH`).
 
-## 🛠️ Requisiti Tecnici
+## 🛠️ Technical Requirements
 
-Il progetto richiede Python 3.x e la libreria `Scapy`.
+The project requires Python 3.x and the `Scapy` library.
 
 ```bash
 pip install scapy
 
 ```
 
-> ⚠️ **Nota sui permessi:** Per mettere l'interfaccia di rete in modalità promiscua e intercettare i pacchetti a basso livello, il sistema operativo richiede privilegi di amministratore.
+> ⚠️ **Note on permissions:** To put the network interface into promiscuous mode and capture low-level packets, administrator/root privileges are required by the operating system.
 
-## 💻 Come Utilizzarlo
+## 💻 How to Use
 
-1. Clona la repository ed entra nella cartella del progetto.
-2. Avvia lo script con i privilegi elevati:
+1. Clone the repository and navigate to the project directory.
+2. Run the script with elevated privileges:
 
 ```bash
-# Su Linux / macOS
+# On Linux / macOS
 sudo python sniffer.py
 
-# Su Windows (Esegui il prompt dei comandi o PowerShell come Amministratore)
+# On Windows (Run Command Prompt or PowerShell as Administrator)
 python sniffer.py
 
 ```
 
-### Come simulare gli allarmi (Testing)
+### How to Simulate Alerts (Testing)
 
-* **Per testare il rilevamento del traffico non cifrato:** Esegui una richiesta HTTP standard da un altro terminale:
+* **To test unencrypted traffic detection:** Send a standard HTTP request from another terminal:
+
 ```bash
-curl [http://neverssl.com](http://neverssl.com)
+curl http://neverssl.com
 
 ```
 
+* **To test Port Scan detection:** Run an automated scan (e.g., using Nmap against your host) or make rapid connections to different ports.
 
-* **Per testare il Port Scan:** Esegui una scansione automatizzata (es. usando Nmap verso il tuo host) oppure effettua connessioni rapide verso porte distinte.
+## 📊 Log Structure (JSON Output)
 
-## 📊 Struttura dei Log (Output JSON)
-
-Gli alert vengono scritti in tempo reale nel file `security_alerts.json`. Ogni evento segue una struttura standardizzata:
+Alerts are written in real time to the `security_alerts.json` file. Each event follows a standardized structure:
 
 ```json
 {
@@ -67,22 +66,19 @@ Gli alert vengono scritti in tempo reale nel file `security_alerts.json`. Ogni e
 }
 
 ```
+
 ## 📸 Screenshots
 
-### Esecuzione
-<img width="695" height="255" alt="image" src="https://github.com/user-attachments/assets/029d5ac4-c311-43bf-a2c9-fb93330c595a" />
+### Execution
 
 ### Log File
-<img width="1182" height="327" alt="image" src="https://github.com/user-attachments/assets/8c1203d9-2db4-4af1-8e5f-f43500933d03" />
 
+## 📈 Future Developments
 
-## 📈 Possibili Sviluppi 
-
-* [ ] Introduzione del multi-threading per evitare la perdita di pacchetti su reti ad alto traffico.
-* [ ] Integrazione di regole di detection avanzate basate sul formato standard **Sigma** o regole **Snort**.
-* [ ] Analisi dei DNS query log per identificare tentativi di connessione a domini malevoli (DGA/C2).
+* [ ] Implementation of multi-threading to prevent packet loss on high-traffic networks.
+* [ ] Integration of advanced detection rules based on standardized **Sigma** or **Snort** formats.
+* [ ] Analysis of DNS query logs to identify connection attempts to malicious domains (DGA/C2).
 
 ---
 
-Sviluppato a scopo didattico e di portfolio per il mondo della Cybersecurity.
-
+Developed for educational and portfolio purposes within the Cybersecurity field.
