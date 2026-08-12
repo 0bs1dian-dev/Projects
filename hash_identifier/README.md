@@ -1,38 +1,43 @@
 # Pure Hash Identifier (Python / Regex Engine)
 
-Un motore di identificazione crittografica ad alta velocità sviluppato in Python. Questo tool nasce per supportare le fasi iniziali di triage durante attività di Penetration Testing o CTF, permettendo all'analista di riconoscere istantaneamente la tipologia di un hash sconosciuto prima di passarlo a strumenti di cracking dedicati come *Hashcat* o *John the Ripper*.
+A high-speed cryptographic identification engine developed in Python. This tool was created to support the initial triage phase during Penetration Testing or CTF activities, allowing analysts to instantly recognize unknown hash types before passing them to dedicated cracking tools like *Hashcat* or *John the Ripper*.
 
-## 🚀 Caratteristiche Principali
+## 🚀 Key Features
 
-* **Zero Dipendenze:** Sviluppato utilizzando esclusivamente il modulo nativo `re` (Espressioni Regolari) di Python. Nessuna installazione o connessione di rete richiesta.
-* **Database di Firme Esteso:** Riconoscimento accurato dei formati più diffusi nell'Information Security (Sistemi operativi, Database, CMS e apparati di rete).
-* **Gestione delle Ambiguità:** Il tool identifica se una stringa geometrica può corrispondere a più algoritmi (es. la sovrapposizione strutturale tra MD5 e Windows NTLM), mostrando tutte le opzioni plausibili.
+* **Zero Dependencies:** Built exclusively using Python's native `re` (Regular Expressions) module. No extra packages or network connection required.
+* **Extended Signature Database:** Accurate recognition of the most common formats in Information Security (Operating Systems, Databases, CMS, and network devices).
+* **Ambiguity Handling:** Identifies when a string structure matches multiple algorithms (e.g., the structural overlap between MD5 and Windows NTLM), displaying all plausible candidates.
 
-## 📊 Algoritmi Supportati
+## 📊 Supported Algorithms
 
-* **Sistemi Operativi:** Windows LM/NTLM, Linux `bcrypt`
-* **Standard Globali:** MD5, SHA-1, SHA-256, SHA-512
-* **Database & CMS:** MySQL 4.1+, WordPress (`phpass`)
+* **Operating Systems:** Windows LM/NTLM, Linux `bcrypt`
+* **Global Standards:** MD5, SHA-1, SHA-256, SHA-512
+* **Databases & CMS:** MySQL 4.1+, WordPress (`phpass`)
 * **Networking:** Cisco Type 7
 
-## 💻 Installazione ed Uso
+## 💻 Installation & Usage
 
 ```bash
-# Clona il progetto ed esegui lo script
+# Clone the project and run the script
 python hash_id.py
+
 ```
-## Esempio di Output
-```bash
-Plaintext
-[?] Inserisci l'hash da identificare: 21232f297a57a5a743894a0e4a801fc3
 
-[*] Analisi strutturale completata. Rilevato/i 2 possibile/i candidato/i:
+## 📊 Sample Output
 
- 🎯 [TIPO]: MD5
-    └── ℹ️ Dettagli: Algoritmo legacy (32 caratteri esadecimali). Molto comune, vulnerabile a collisioni.
+```text
+[?] Enter the hash to identify: 21232f297a57a5a743894a0e4a801fc3
 
- 🎯 [TIPO]: NTLM / LM (Windows)
-    └── ℹ️ Dettagli: Hash di autenticazione locale/dominio Microsoft Windows (SAM database e Active Directory).
+[*] Structural analysis completed. Detected 2 possible candidate(s):
+
+ 🎯 [TYPE]: MD5
+    └── ℹ️ Details: Legacy algorithm (32 hexadecimal characters). Very common, vulnerable to collisions.
+
+ 🎯 [TYPE]: NTLM / LM (Windows)
+    └── ℹ️ Details: Microsoft Windows local/domain authentication hash (SAM database and Active Directory).
+
 ```
+
 ---
-Sviluppato come utility tool a riga di comando per attività di Ethical Hacking e Log Analysis.
+
+Developed as a command-line utility tool for Ethical Hacking and Log Analysis activities.
