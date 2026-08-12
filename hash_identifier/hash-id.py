@@ -1,75 +1,75 @@
 import re
 
-# Il database delle firme crittografiche basato su Regex standard industriali
-DIZIONARIO_HASH = {
+# Cryptographic signature database based on industry-standard regex patterns
+HASH_DICTIONARY = {
     "MD5": {
         "regex": r"^[0-9a-fA-F]{32}$",
-        "info": "Algoritmo legacy (32 caratteri esadecimali). Molto comune, vulnerabile a collisioni."
+        "info": "Legacy algorithm (32 hexadecimal characters). Very common, vulnerable to collisions."
     },
     "SHA-1": {
         "regex": r"^[0-9a-fA-F]{40}$",
-        "info": "Standard deprecato (40 caratteri esadecimali). Usato in vecchi sistemi e Git."
+        "info": "Deprecated standard (40 hexadecimal characters). Used in older systems and Git."
     },
     "SHA-256": {
         "regex": r"^[0-9a-fA-F]{64}$",
-        "info": "Standard attuale sicuro (64 caratteri esadecimali). Usato in protocolli web e Blockchain."
+        "info": "Current secure standard (64 hexadecimal characters). Used in web protocols and Blockchain."
     },
     "SHA-512": {
         "regex": r"^[0-9a-fA-F]{128}$",
-        "info": "Algoritmo ad alta sicurezza della famiglia SHA-2 (128 caratteri esadecimali)."
+        "info": "High-security algorithm from the SHA-2 family (128 hexadecimal characters)."
     },
     "NTLM / LM (Windows)": {
         "regex": r"^[0-9a-fA-F]{32}$",
-        "info": "Hash di autenticazione locale/dominio Microsoft Windows (SAM database e Active Directory)."
+        "info": "Microsoft Windows local/domain authentication hash (SAM database and Active Directory)."
     },
     "MySQL 4.1+": {
         "regex": r"^\*[0-9a-fA-F]{40}$",
-        "info": "Formato di hashing utilizzato dai server database MySQL e MariaDB (inizia con *)."
+        "info": "Hashing format used by MySQL and MariaDB database servers (starts with *)."
     },
     "bcrypt": {
         "regex": r"^\$2[axy]\$[0-9]{2}\$[./A-Za-z0-9]{53}$",
-        "info": "Algoritmo sicuro basato su Blowfish con salt adattivo (standard Linux e moderni framework web)."
+        "info": "Secure Blowfish-based algorithm with adaptive salt (Linux standard and modern web frameworks)."
     },
     "md5(wordpress) / phpass": {
         "regex": r"^\$P\$[./A-Za-z0-9]{31}$",
-        "info": "Formato specifico utilizzato dal CMS WordPress per proteggere le password nel database."
+        "info": "Specific format used by WordPress CMS to protect passwords in the database."
     },
     "Cisco Type 7": {
         "regex": r"^[0-9]{2}[0-9a-fA-F]+$",
-        "info": "Cifratura debole utilizzata nei file di configurazione dei router Cisco (facilmente invertibile)."
+        "info": "Weak encryption used in Cisco router configuration files (easily reversible)."
     }
 }
 
-def analizza_hash(hash_string):
+def analyze_hash(hash_string):
     hash_string = hash_string.strip()
-    match_trovati = []
+    matches_found = []
     
-    for nome_algoritmo, regole in DIZIONARIO_HASH.items():
-        if re.match(regole["regex"], hash_string):
-            match_trovati.append((nome_algoritmo, regole["info"]))
+    for algorithm_name, rules in HASH_DICTIONARY.items():
+        if re.match(rules["regex"], hash_string):
+            matches_found.append((algorithm_name, rules["info"]))
             
-    return match_trovati
+    return matches_found
 
 def main():
     print("=" * 75)
-    print("      🔏 PURE HASH IDENTIFIER - HIGH-SPEED CRYTOGRAPHIC ENGINE      ")
+    print("      🔏 PURE HASH IDENTIFIER - HIGH-SPEED CRYPTOGRAPHIC ENGINE      ")
     print("=" * 75)
     
-    hash_utente = input("\n[?] Inserisci l'hash da identificare: ").strip()
+    user_hash = input("\n[?] Enter the hash to identify: ").strip()
     
-    if not hash_utente:
-        print("[-] Input vuoto. Uscita.")
+    if not user_hash:
+        print("[-] Empty input. Exiting.")
         return
         
-    risultati = analizza_hash(hash_utente)
+    results = analyze_hash(user_hash)
     
-    if risultati:
-        print(f"\n[*] Analisi strutturale completata. Rilevato/i {len(risultati)} possibile/i candidato/i:\n")
-        for algoritmo, descrizione in risultati:
-            print(f" 🎯 [TIPO]: \033[1;36m{algoritmo}\033[0m")
-            print(f"    └── ℹ️ Dettagli: {descrizione}\n")
+    if results:
+        print(f"\n[*] Structural analysis completed. Detected {len(results)} possible candidate(s):\n")
+        for algorithm, description in results:
+            print(f" 🎯 [TYPE]: \033[1;36m{algorithm}\033[0m")
+            print(f"    └── ℹ️ Details: {description}\n")
     else:
-        print("\n[-] Nessun algoritmo corrispondente trovato nel database delle firme.")
+        print("\n[-] No matching algorithm found in the signature database.")
         
     print("=" * 75)
 
